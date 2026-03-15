@@ -9,6 +9,7 @@ function validateStroke(stroke) {
   if (typeof stroke.x !== "number" || typeof stroke.y !== "number") return false;
   if (typeof stroke.color !== "string" || stroke.color.length === 0) return false;
   if (typeof stroke.action !== "string" || stroke.action.length === 0) return false;
+  if (stroke.strokeWidth !== undefined && typeof stroke.strokeWidth !== "number") return false;
   return true;
 }
 
