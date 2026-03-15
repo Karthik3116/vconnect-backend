@@ -75,6 +75,70 @@ router.post("/undo", requireJson, (req, res) => {
   });
 });
 
+// GET /api/drawing/snapshot/:roomCode
+router.get("/snapshot/:roomCode", (req, res) => {
+  const { roomCode } = req.params;
+
+  if (!validateRoomCode(roomCode)) {
+    return res
+      .status(400)
+      .json({ error: "Invalid room code. Must be a 6-digit string." });
+  }
+
+  const result = store.getSnapshot(roomCode);
+  if (!result) {
+    return res.status(404).json({ error: "Room not found." });
+  }
+
+  res.json({
+    strokes: result.strokes,
+    count: result.count,
+    snapshotVersion: result.snapshotVersion,
+    serverTime: Date.now(),
+  });
+});
+
+// GET /api/drawing/version/:roomCode
+router.get("/version/:roomCode", (req, res) => {
+  const { roomCode } = req.params;
+
+  if (!validateRoomCode(roomCode)) {
+    return res
+      .status(400)
+      .json({ error: "Invalid room code. Must be a 6-digit string." });
+  }
+
+  const version = store.getSnapshotVersion(roomCode);
+  if (version === null) {
+    return res.status(404).json({ error: "Room not found." });
+  }
+
+  res.json({ snapshotVersion: version, serverTime: Date.now() });
+});
+
+// DELETE /api/drawing/strokes/:roomCode/last
+router.delete("/strokes/:roomCode/last", (req, res) => {
+  const { roomCode } = req.params;
+
+  if (!validateRoomCode(roomCode)) {
+    return res
+      .status(400)
+      .json({ error: "Invalid room code. Must be a 6-digit string." });
+  }
+
+  const result = store.deleteLastStrokeGroup(roomCode);
+  if (!result.ok) {
+    const status = result.reason === "Room not found" ? 404 : 400;
+    return res.status(status).json({ error: result.reason });
+  }
+
+  res.json({
+    message: "Last stroke group deleted",
+    strokeId: result.strokeId,
+    deletedCount: result.deletedCount,
+  });
+});
+
 // GET /api/drawing/sync/:roomCode?last_timestamp=<time>
 router.get("/sync/:roomCode", (req, res) => {
   const { roomCode } = req.params;
